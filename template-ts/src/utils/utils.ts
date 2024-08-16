@@ -16,3 +16,5 @@ export const resizeCanvasToDisplaySize = (canvas: HTMLCanvasElement) => {
 
   return needResize;
 };
+
+export const randomInt = (range: number) => Math.floor(Math.random() * range);

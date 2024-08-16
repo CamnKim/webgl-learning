@@ -1,9 +1,12 @@
+/* eslint-disable no-plusplus */
 import './style.css';
 import { init } from './utils/webglInit';
 import vertexShaderSource from './shaders/shader.vert?raw';
 import fragShaderSource from './shaders/shader.frag?raw';
 import { compileShader } from './utils/shaderUtils';
 import { createProgram } from './utils/createProgram';
+import { randomInt, resizeCanvasToDisplaySize } from './utils/utils';
+import { setRectangle } from './utils/draw_random_rectangles';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <canvas id="c"></canvas>
@@ -19,13 +22,9 @@ const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-// Three 2d points
-const positions = [
-  0, 0,
-  0, 0.5,
-  0.7, 0,
-];
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
+
+const colorLocation = gl.getUniformLocation(program, 'u_color');
 
 const vao = gl.createVertexArray();
 gl.bindVertexArray(vao);
@@ -38,6 +37,7 @@ const stride = 0; // 0 = move forward size * sizeof(type) each iteration to get 
 const offset = 0; // start at the beginning of the buffer
 gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
+resizeCanvasToDisplaySize(gl.canvas as HTMLCanvasElement);
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 // Clear the canvas
@@ -47,9 +47,27 @@ gl.clear(gl.COLOR_BUFFER_BIT);
 // Tell it to use our program (pair of shaders)
 gl.useProgram(program);
 
+// Pass in the canvas resolution so we can convert from pixels to clip space in the shader
+gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
 // Bind the attribute/buffer set we want.
 gl.bindVertexArray(vao);
 
-const primitiveType = gl.TRIANGLES;
-const count = 3;
-gl.drawArrays(primitiveType, offset, count);
+for (let i = 0; i < 50; ++i) {
+  // Setup Rect
+  setRectangle(
+    gl,
+    randomInt(gl.canvas.width),
+    randomInt(gl.canvas.height),
+    randomInt(600),
+    randomInt(600),
+  );
+
+  // Set random color
+  gl.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
+
+  // Draw rect
+  const primitaveType = gl.TRIANGLES;
+  const count = 6;
+  gl.drawArrays(primitaveType, offset, count);
+}
